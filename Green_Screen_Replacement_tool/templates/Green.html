@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Screen Video Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .file-input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-input-display:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .file-input-display.has-file {
+            border-color: #4CAF50;
+            background: #f0fff0;
+        }
+
+        .file-text {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .file-text.has-file {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .progress-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        .progress-bar-container {
+            background: #e9ecef;
+            height: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1em;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .result-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .video-preview {
+            margin: 20px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .video-preview video {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+            margin: 10px 5px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #6c757d, #495057);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .supported-formats {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Green Screen Processor</h1>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-section">
+                <div class="file-input-group">
+                    <label for="videoFile">📹 Select Green Screen Video:</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="videoFile" name="video" accept="video/*" required>
+                        <div class="file-input-display" id="videoDisplay">
+                            <span class="file-text">Click to select video file</span>
+                            <span>📁</span>
+                        </div>
+                    </div>
+                    <div class="supported-formats">Supported: MP4, AVI, MOV, MKV, WMV, FLV</div>
+                </div>
+
+                <div class="file-input-group">
+                    <label for="backgroundFile">🖼️ Select Background Image:</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="backgroundFile" name="background" accept="image/*" required>
+                        <div class="file-input-display" id="backgroundDisplay">
+                            <span class="file-text">Click to select background image</span>
+                            <span>📁</span>
+                        </div>
+                    </div>
+                    <div class="supported-formats">Supported: JPG, PNG, BMP, TIFF</div>
+                </div>
+
+                <button type="submit" class="upload-btn" id="uploadBtn">
+                    🚀 Process Video
+                </button>
+            </div>
+        </form>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-title">
+                <span class="loading-spinner"></span>
+                Processing your video...
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+            <div class="progress-text" id="progressText">Initializing...</div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-title" id="resultTitle"></div>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTaskId = null;
+        let progressInterval = null;
+
+        // File input handling
+        document.getElementById('videoFile').addEventListener('change', function(e) {
+            updateFileDisplay('videoDisplay', e.target.files[0]);
+        });
+
+        document.getElementById('backgroundFile').addEventListener('change', function(e) {
+            updateFileDisplay('backgroundDisplay', e.target.files[0]);
+        });
+
+        function updateFileDisplay(displayId, file) {
+            const display = document.getElementById(displayId);
+            const textElement = display.querySelector('.file-text');
+
+            if (file) {
+                textElement.textContent = `Selected: ${file.name}`;
+                textElement.classList.add('has-file');
+                display.classList.add('has-file');
+            } else {
+                textElement.textContent = displayId.includes('video') ?
+                    'Click to select video file' : 'Click to select background image';
+                textElement.classList.remove('has-file');
+                display.classList.remove('has-file');
+            }
+        }
+
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const uploadBtn = document.getElementById('uploadBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Reset previous states
+            hideError();
+            hideProgress();
+            hideResult();
+
+            // Disable upload button
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="loading-spinner"></span>Uploading...';
+
+            // Upload files
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentTaskId = data.task_id;
+                    showProgress();
+                    startProgressPolling();
+                } else {
+                    showError(data.error || 'Upload failed');
+                }
+            })
+            .catch(error => {
+                showError('Upload failed: ' + error.message);
+            })
+            .finally(() => {
+                // Re-enable upload button
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '🚀 Process Video';
+            });
+        });
+
+        function startProgressPolling() {
+            if (!currentTaskId) return;
+
+            progressInterval = setInterval(() => {
+                fetch(`/progress/${currentTaskId}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateProgress(data.progress);
+
+                    if (data.completed) {
+                        clearInterval(progressInterval);
+                        hideProgress();
+
+                        if (data.result.success) {
+                            showSuccess(data.download_url);
+                        } else {
+                            showError(data.result.error || 'Processing failed');
+                        }
+                    }
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    hideProgress();
+                    showError('Error checking progress: ' + error.message);
+                });
+            }, 1000);
+        }
+
+        function updateProgress(progress) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = Math.round(progress) + '%';
+
+            if (progress < 100) {
+                progressText.textContent = `Processing... ${Math.round(progress)}% complete`;
+            } else {
+                progressText.textContent = 'Finalizing...';
+            }
+        }
+
+        function showProgress() {
+            document.getElementById('progressContainer').style.display = 'block';
+        }
+
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        function showSuccess(downloadUrl) {
+            const resultContainer = document.getElementById('resultContainer');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultContent = document.getElementById('resultContent');
+
+            resultContainer.className = 'result-container result-success';
+            resultTitle.textContent = '🎉 Processing Complete!';
+            resultContent.innerHTML = `
+                <div class="video-preview">
+                    <video controls>
+                        <source src="/preview/${currentTaskId}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <a href="${downloadUrl}" class="download-btn">📥 Download Video</a>
+                <button onclick="resetForm()" class="download-btn reset-btn">🔄 Process Another Video</button>
+            `;
+            resultContainer.style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+
+            const resultContainer = document.getElementById('resultContainer');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultContent = document.getElementById('resultContent');
+
+            resultContainer.className = 'result-container result-error';
+            resultTitle.textContent = '❌ Processing Failed';
+            resultContent.innerHTML = `
+                <p>${message}</p>
+                <button onclick="resetForm()" class="download-btn reset-btn">🔄 Try Again</button>
+            `;
+            resultContainer.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideResult() {
+            document.getElementById('resultContainer').style.display = 'none';
+        }
+
+        function resetForm() {
+            // Clear form
+            document.getElementById('uploadForm').reset();
+
+            // Reset file displays
+            updateFileDisplay('videoDisplay', null);
+            updateFileDisplay('backgroundDisplay', null);
+
+            // Hide all status containers
+            hideError();
+            hideProgress();
+            hideResult();
+
+            // Clear task ID
+            currentTaskId = null;
+
+            // Clear any running intervals
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+        }
+
+        // Drag and drop functionality
+        ['videoDisplay', 'backgroundDisplay'].forEach(id => {
+            const element = document.getElementById(id);
+            const input = element.parentElement.querySelector('input[type="file"]');
+
+            element.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                element.style.borderColor = '#667eea';
+                element.style.background = '#f0f4ff';
+            });
+
+            element.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                element.style.borderColor = '#ddd';
+                element.style.background = '#f9f9f9';
+            });
+
+            element.addEventListener('drop', function(e) {
+                e.preventDefault();
+                element.style.borderColor = '#ddd';
+                element.style.background = '#f9f9f9';
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    input.files = files;
+                    updateFileDisplay(id, files[0]);
+                }
+            });
+        });
+
+        // Prevent page refresh on file drop
+        window.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+
+        window.addEventListener('drop', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
